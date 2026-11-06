@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Food Photo Upload</title>
+<style>
+:root{color-scheme:light dark;--bg:#f6f6f4;--card:#fff;--ink:#1d1d1b;--mute:#6b6b66;--line:#dcdcd6;--acc:#c2410c}
+@media (prefers-color-scheme:dark){:root{--bg:#141413;--card:#1e1e1c;--ink:#f1f1ee;--mute:#a1a19a;--line:#33332f;--acc:#ea580c}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,sans-serif;padding:16px}
+main{max-width:560px;margin:0 auto;display:grid;gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+h1{font-size:1.4rem;margin:0}
+h2{font-size:1rem;margin:0 0 6px}
+p{margin:0;color:var(--mute);font-size:.9rem}
+label{display:block;font-size:.85rem;color:var(--mute);margin:10px 0 4px}
+input[type=text],input[type=password]{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+input[type=file]{width:100%;margin:8px 0}
+button{padding:10px 16px;border:0;border-radius:8px;background:var(--acc);color:#fff;font:inherit;font-weight:600;cursor:pointer}
+button:disabled{opacity:.5}
+.row{display:flex;gap:8px;margin-top:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-top:10px}
+.thumb{position:relative;border-radius:8px;overflow:hidden;border:1px solid var(--line);aspect-ratio:1;background:var(--bg)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb button{position:absolute;right:4px;top:4px;padding:2px 8px;font-size:.8rem;background:rgba(0,0,0,.65)}
+#log{font-size:.9rem;color:var(--mute);min-height:1.4em;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<main>
+  <h1>Food Photo Upload</h1>
+
+  <section class="card">
+    <h2>1. Connect to GitHub</h2>
+    <p>Saved only in this browser. Never share your token.</p>
+    <label for="user">GitHub username</label>
+    <input type="text" id="user" autocomplete="off">
+    <label for="repo">Repository name</label>
+    <input type="text" id="repo" autocomplete="off">
+    <label for="token">Access token</label>
+    <input type="password" id="token" autocomplete="off">
+    <div class="row"><button id="save">Save and load photos</button></div>
+  </section>
+
+  <section class="card">
+    <h2>2. Upload photos</h2>
+    <p>Photos are resized automatically.</p>
+    <input type="file" id="files" accept="image/*" multiple>
+    <button id="up">Upload</button>
+    <div id="log" style="margin-top:10px"></div>
+  </section>
+
+  <section class="card">
+    <h2>Photos in the slideshow</h2>
+    <div class="grid" id="grid"></div>
+  </section>
+</main>
+
+<script>
+var $=function(id){return document.getElementById(id)};
+var store={
+  get:function(k){try{return localStorage.getItem(k)||''}catch(e){return ''}},
+  set:function(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+};
+$('user').value=store.get('gh_user')||'jyunhao219';
+$('repo').value=store.get('gh_repo')||'food-slideshow';
+$('token').value=store.get('gh_token');
+function log(m){$('log').textContent=m}
+
+function cfg(){
+  var c={user:$('user').value.trim(),repo:$('repo').value.trim(),token:$('token').value.trim()};
+  store.set('gh_user',c.user);store.set('gh_repo',c.repo);store.set('gh_token',c.token);
+  return c;
+}
+function api(path,opt){
+  var c=cfg();opt=opt||{};
+  return fetch('https://api.github.com/repos/'+c.user+'/'+c.repo+'/contents/'+path,{
+    method:opt.method||'GET',
+    body:opt.body,
+    cache:'no-store',
+    headers:{'Authorization':'Bearer '+c.token,'Accept':'application/vnd.github+json','Content-Type':'application/json'}
+  });
+}
+async function getList(){
+  var r=await api('photos.json');
+  if(r.status===404)return{list:[],sha:null};
+  if(!r.ok)throw new Error('Cannot read photo list ('+r.status+'). Check username, repository name and token.');
+  var j=await r.json(),list=[];
+  try{list=JSON.parse(atob(j.content.replace(/\n/g,'')))}catch(e){}
+  return{list:list,sha:j.sha};
+}
+async function saveList(list,sha){
+  var body={message:'Update photo list',content:btoa(JSON.stringify(list,null,1))};
+  if(sha)body.sha=sha;
+  var r=await api('photos.json',{method:'PUT',body:JSON.stringify(body)});
+  if(!r.ok)throw new Error('Cannot save photo list ('+r.status+'). The token needs Contents: Read and write.');
+}
+function toJpeg(file){
+  return new Promise(function(res,rej){
+    var u=URL.createObjectURL(file),im=new Image();
+    im.onload=function(){
+      var s=Math.min(1,1600/Math.max(im.width,im.height));
+      var c=document.createElement('canvas');
+      c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);
+      var x=c.getContext('2d');
+      x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+      x.drawImage(im,0,0,c.width,c.height);
+      URL.revokeObjectURL(u);
+      res(c.toDataURL('image/jpeg',0.85).split(',')[1]);
+    };
+    im.onerror=function(){rej(new Error('Cannot read '+file.name))};
+    im.src=u;
+  });
+}
+async function refresh(){
+  try{
+    var d=await getList(),g=$('grid');
+    g.innerHTML='';
+    if(!d.list.length){g.textContent='No photos yet.';return}
+    d.list.forEach(function(n){
+      var t=document.createElement('div');t.className='thumb';
+      var im=document.createElement('img');im.src='images/'+n;im.alt='Photo';
+      var b=document.createElement('button');b.textContent='Remove';
+      b.onclick=function(){remove(n)};
+      t.appendChild(im);t.appendChild(b);g.appendChild(t);
+    });
+  }catch(e){log(e.message)}
+}
+async function remove(name){
+  if(!confirm('Remove this photo from the slideshow?'))return;
+  try{
+    log('Removing...');
+    var d=await getList();
+    await saveList(d.list.filter(function(n){return n!==name}),d.sha);
+    var f=await api('images/'+name);
+    if(f.ok){
+      var j=await f.json();
+      await api('images/'+name,{method:'DELETE',body:JSON.stringify({message:'Remove photo',sha:j.sha})});
+    }
+    log('Removed. The slideshow updates in about 1 to 2 minutes.');
+    await refresh();
+  }catch(e){log(e.message)}
+}
+$('save').onclick=function(){cfg();log('Saved.');refresh()};
+$('up').onclick=async function(){
+  var files=Array.prototype.slice.call($('files').files);
+  if(!files.length){log('Choose photos first.');return}
+  $('up').disabled=true;
+  try{
+    var names=[];
+    for(var i=0;i<files.length;i++){
+      log('Uploading '+(i+1)+' of '+files.length+'...');
+      var name=Date.now()+'-'+i+'.jpg';
+      var r=await api('images/'+name,{method:'PUT',body:JSON.stringify({message:'Add photo',content:await toJpeg(files[i])})});
+      if(!r.ok)throw new Error('Upload failed ('+r.status+'). Check the token has Contents: Read and write.');
+      names.push(name);
+    }
+    var d=await getList();
+    await saveList(d.list.concat(names),d.sha);
+    log('Done. New photos show in the slideshow in about 1 to 2 minutes.');
+    $('files').value='';
+    await refresh();
+  }catch(e){log(e.message)}
+  $('up').disabled=false;
+};
+if($('token').value)refresh();
+</script>
+</body>
+</html>
