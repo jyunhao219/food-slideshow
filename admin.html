@@ -52,7 +52,7 @@ button:disabled{opacity:.5}
   </section>
 
   <section class="card">
-    <h2>Photos in the slideshow</h2>
+    <h2 id="count">Photos in the slideshow now</h2>
     <div class="grid" id="grid"></div>
   </section>
 </main>
@@ -113,14 +113,25 @@ function toJpeg(file){
     im.src=u;
   });
 }
+async function thumb(n,im){
+  try{
+    var r=await api('images/'+n);
+    if(r.ok){
+      var j=await r.json();
+      if(j.content){im.src='data:image/jpeg;base64,'+j.content.replace(/\n/g,'');return}
+    }
+  }catch(e){}
+  im.src='images/'+n;
+}
 async function refresh(){
   try{
     var d=await getList(),g=$('grid');
+    $('count').textContent='Photos in the slideshow now ('+d.list.length+')';
     g.innerHTML='';
     if(!d.list.length){g.textContent='No photos yet.';return}
     d.list.forEach(function(n){
       var t=document.createElement('div');t.className='thumb';
-      var im=document.createElement('img');im.src='images/'+n;im.alt='Photo';
+      var im=document.createElement('img');im.alt='Photo';thumb(n,im);
       var b=document.createElement('button');b.textContent='Remove';
       b.onclick=function(){remove(n)};
       t.appendChild(im);t.appendChild(b);g.appendChild(t);
