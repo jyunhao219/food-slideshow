@@ -17,13 +17,30 @@ html,body{margin:0;height:100%;background:var(--bg);overflow:hidden}
 <div class="stage" id="stage"><div id="msg">No photos yet</div></div>
 <script>
 (function(){
-  var stage=document.getElementById('stage'),msg=document.getElementById('msg'),cur='',els=[],i=0;
-  function build(list){
+  var OWNER='jyunhao219',REPO='food-slideshow',BRANCH='main';
+  var RAW='https://raw.githubusercontent.com/'+OWNER+'/'+REPO+'/'+BRANCH+'/images/';
+  var API='https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/photos.json?ref='+BRANCH;
+  var stage=document.getElementById('stage'),msg=document.getElementById('msg');
+  var cur='',els=[],i=0;
+
+  function getList(){
+    return fetch(API,{cache:'no-cache',headers:{'Accept':'application/vnd.github.raw+json'}})
+      .then(function(r){if(!r.ok)throw 0;return r.json()})
+      .then(function(l){return{list:l,live:true}})
+      .catch(function(){
+        return fetch('photos.json?t='+Date.now(),{cache:'no-store'})
+          .then(function(r){return r.ok?r.json():[]})
+          .then(function(l){return{list:l,live:false}});
+      });
+  }
+  function build(list,live){
     els.forEach(function(e){e.remove()});els=[];i=0;
     list.forEach(function(n,k){
-      var im=new Image();
+      var im=new Image(),alt=live?'images/'+n:RAW+n;
       im.className='s'+(k===0?' on':'');
-      im.src='images/'+n;im.alt='Food photo';
+      im.alt='Food photo';
+      im.onerror=function(){if(!im.dataset.f){im.dataset.f=1;im.src=alt}};
+      im.src=live?RAW+n:'images/'+n;
       stage.appendChild(im);els.push(im);
     });
     msg.style.display=list.length?'none':'flex';
@@ -35,13 +52,13 @@ html,body{margin:0;height:100%;background:var(--bg);overflow:hidden}
     els[i].classList.add('on');
   }
   function load(){
-    fetch('photos.json?t='+Date.now(),{cache:'no-store'})
-      .then(function(r){return r.ok?r.json():[]})
-      .then(function(list){var s=JSON.stringify(list);if(s!==cur){cur=s;build(list)}})
-      .catch(function(){});
+    getList().then(function(d){
+      var s=JSON.stringify(d.list);
+      if(s!==cur){cur=s;build(d.list,d.live)}
+    }).catch(function(){});
   }
   load();
-  setInterval(load,60000);
+  setInterval(load,30000);
   setInterval(tick,3000);
 })();
 </script>
