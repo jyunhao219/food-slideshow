@@ -3,59 +3,94 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Food Photo Upload</title>
+<title>Food Slideshow Studio</title>
 <style>
-:root{color-scheme:light dark;--bg:#f6f6f4;--card:#fff;--ink:#1d1d1b;--mute:#6b6b66;--line:#dcdcd6;--acc:#c2410c}
-@media (prefers-color-scheme:dark){:root{--bg:#141413;--card:#1e1e1c;--ink:#f1f1ee;--mute:#a1a19a;--line:#33332f;--acc:#ea580c}}
+:root{color-scheme:light dark;--bg:#faf7f2;--bg2:#fff;--ink:#231f1a;--mute:#7a7268;--line:#e8e1d6;--acc:#ea580c;--ok:#16a34a;--sh:0 1px 2px rgba(35,31,26,.06),0 8px 24px rgba(35,31,26,.06)}
+@media (prefers-color-scheme:dark){:root{--bg:#12100e;--bg2:#1c1916;--ink:#f4efe8;--mute:#a39a8e;--line:#2e2924;--acc:#fb923c;--ok:#4ade80;--sh:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35)}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,sans-serif;padding:16px}
-main{max-width:560px;margin:0 auto;display:grid;gap:16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
-h1{font-size:1.4rem;margin:0}
-h2{font-size:1rem;margin:0 0 6px}
-p{margin:0;color:var(--mute);font-size:.9rem}
-label{display:block;font-size:.85rem;color:var(--mute);margin:10px 0 4px}
-input[type=text],input[type=password]{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
-input[type=file]{width:100%;margin:8px 0}
-button{padding:10px 16px;border:0;border-radius:8px;background:var(--acc);color:#fff;font:inherit;font-weight:600;cursor:pointer}
-button:disabled{opacity:.5}
-.row{display:flex;gap:8px;margin-top:12px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-top:10px}
-.thumb{position:relative;border-radius:8px;overflow:hidden;border:1px solid var(--line);aspect-ratio:1;background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px 70px;display:grid;gap:16px}
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:6px 2px}
+.logo{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;font-size:26px;background:linear-gradient(135deg,#f97316,#f59e0b);box-shadow:var(--sh)}
+.ttl{flex:1;min-width:200px}
+h1{font-size:1.35rem;margin:0;letter-spacing:-.01em}
+.ttl p{margin:2px 0 0;color:var(--mute);font-size:.9rem}
+.view{font-size:.85rem;font-weight:600;color:var(--acc);text-decoration:none;border:1px solid var(--line);padding:8px 14px;border-radius:999px;background:var(--bg2)}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--sh)}
+h2{font-size:1rem;margin:0 0 12px}
+summary{display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-weight:600;list-style:none;gap:10px}
+summary::-webkit-details-marker{display:none}
+.pill{font-size:.78rem;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--mute);max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill.ok{color:var(--ok);border-color:currentColor}
+label.f{display:block;font-size:.8rem;color:var(--mute);margin:12px 0 4px}
+input[type=text],input[type=password]{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit}
+input:focus{outline:2px solid var(--acc);outline-offset:1px}
+.hint{font-size:.8rem;color:var(--mute);margin:8px 0 0}
+.btn{border:0;border-radius:12px;padding:12px 22px;font:inherit;font-weight:700;color:#fff;background:linear-gradient(135deg,#c2410c,#ea580c);cursor:pointer;box-shadow:0 4px 14px rgba(234,88,12,.3);transition:transform .1s}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.drop{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;padding:28px 16px;border:2px dashed var(--line);border-radius:16px;cursor:pointer;color:var(--mute);transition:.15s}
+.drop:hover,.drop.over{border-color:var(--acc);background:rgba(234,88,12,.06)}
+.drop strong{color:var(--ink)}
+.ico{font-size:32px}
+.strip{display:flex;gap:8px;overflow-x:auto;margin-top:12px}
+.strip img{width:56px;height:56px;object-fit:cover;border-radius:10px;border:1px solid var(--line);flex:none}
+.bar{height:8px;border-radius:99px;background:var(--bg);border:1px solid var(--line);overflow:hidden;margin-top:14px}
+.bar[hidden]{display:none}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ea580c,#f59e0b);transition:width .25s}
+.row{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}
+#log{font-size:.85rem;color:var(--mute)}
+.head{display:flex;align-items:center;justify-content:space-between}
+.head h2{margin:0}
+.count{min-width:28px;text-align:center;font-weight:700;font-size:.85rem;padding:3px 10px;border-radius:999px;background:linear-gradient(135deg,#c2410c,#ea580c);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-top:14px}
+.thumb{position:relative;margin:0;aspect-ratio:1;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--bg)}
 .thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.thumb button{position:absolute;right:4px;top:4px;padding:2px 8px;font-size:.8rem;background:rgba(0,0,0,.65)}
-#log{font-size:.9rem;color:var(--mute);min-height:1.4em;white-space:pre-wrap}
+.num{position:absolute;left:6px;top:6px;font-size:.72rem;font-weight:700;color:#fff;background:rgba(0,0,0,.55);padding:1px 8px;border-radius:99px}
+.rm{position:absolute;right:6px;bottom:6px;border:0;border-radius:99px;padding:5px 12px;font:inherit;font-size:.78rem;font-weight:600;color:#fff;background:rgba(220,38,38,.92);cursor:pointer}
+.empty{grid-column:1/-1;text-align:center;color:var(--mute);padding:24px 0}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#231f1a;color:#fff;padding:12px 18px;border-radius:12px;font-size:.9rem;max-width:90vw;transition:.25s;box-shadow:var(--sh)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.bad{background:#b91c1c}
 </style>
 </head>
 <body>
-<main>
-  <h1>Food Photo Upload</h1>
+<div class="wrap">
+  <header>
+    <div class="logo">🍽️</div>
+    <div class="ttl"><h1>Food Slideshow Studio</h1><p>Add, remove and preview the photos on your slideshow.</p></div>
+    <a class="view" href="./" target="_blank" rel="noopener">View slideshow ↗</a>
+  </header>
 
-  <section class="card">
-    <h2>1. Connect to GitHub</h2>
-    <p>Saved only in this browser. Never share your token.</p>
-    <label for="user">GitHub username</label>
+  <details class="card" id="conn" open>
+    <summary><span>Connection</span><span class="pill" id="pill">Not connected</span></summary>
+    <label class="f" for="user">GitHub username</label>
     <input type="text" id="user" autocomplete="off">
-    <label for="repo">Repository name</label>
+    <label class="f" for="repo">Repository name</label>
     <input type="text" id="repo" autocomplete="off">
-    <label for="token">Access token</label>
+    <label class="f" for="token">Access token</label>
     <input type="password" id="token" autocomplete="off">
-    <div class="row"><button id="save">Save and load photos</button></div>
+    <p class="hint">Saved only in this browser. Never share your token.</p>
+    <div class="row"><button class="btn" id="save">Save and connect</button></div>
+  </details>
+
+  <section class="card">
+    <h2>Add photos</h2>
+    <label class="drop" id="drop" for="files">
+      <div class="ico">📸</div><strong>Tap to choose photos</strong><span>or drag and drop them here</span>
+    </label>
+    <input type="file" id="files" accept="image/*" multiple hidden>
+    <div class="strip" id="strip"></div>
+    <div class="bar" id="barwrap" hidden><i id="bar"></i></div>
+    <div class="row"><button class="btn" id="up" disabled>Upload</button><span id="log"></span></div>
   </section>
 
   <section class="card">
-    <h2>2. Upload photos</h2>
-    <p>Photos are resized automatically.</p>
-    <input type="file" id="files" accept="image/*" multiple>
-    <button id="up">Upload</button>
-    <div id="log" style="margin-top:10px"></div>
+    <div class="head"><h2>Live photos</h2><span class="count" id="count">0</span></div>
+    <div class="grid" id="grid"><div class="empty">Connect above to see your photos.</div></div>
   </section>
-
-  <section class="card">
-    <h2 id="count">Photos in the slideshow now</h2>
-    <div class="grid" id="grid"></div>
-  </section>
-</main>
+</div>
+<div class="toast" id="toast"></div>
 
 <script>
 var $=function(id){return document.getElementById(id)};
@@ -66,8 +101,15 @@ var store={
 $('user').value=store.get('gh_user')||'jyunhao219';
 $('repo').value=store.get('gh_repo')||'food-slideshow';
 $('token').value=store.get('gh_token');
-function log(m){$('log').textContent=m}
+var thumbs={},chosen=[],busy=false;
 
+function toast(m,bad){
+  var t=$('toast');t.textContent=m;t.className='toast show'+(bad?' bad':'');
+  clearTimeout(toast.t);toast.t=setTimeout(function(){t.className='toast'},4500);
+}
+function log(m){$('log').textContent=m}
+function prog(p){$('bar').style.width=Math.round(p*100)+'%'}
+function setPill(ok,txt){var p=$('pill');p.textContent=txt;p.className='pill'+(ok?' ok':'')}
 function cfg(){
   var c={user:$('user').value.trim(),repo:$('repo').value.trim(),token:$('token').value.trim()};
   store.set('gh_user',c.user);store.set('gh_repo',c.repo);store.set('gh_token',c.token);
@@ -76,16 +118,21 @@ function cfg(){
 function api(path,opt){
   var c=cfg();opt=opt||{};
   return fetch('https://api.github.com/repos/'+c.user+'/'+c.repo+'/contents/'+path,{
-    method:opt.method||'GET',
-    body:opt.body,
-    cache:'no-store',
+    method:opt.method||'GET',body:opt.body,cache:'no-store',
     headers:{'Authorization':'Bearer '+c.token,'Accept':'application/vnd.github+json','Content-Type':'application/json'}
   });
+}
+function errMsg(s){
+  if(s===401)return 'Token not accepted. Paste it again.';
+  if(s===403)return 'No write permission. Set the token Contents to Read and write.';
+  if(s===404)return 'Repository not found. Check username and repository name.';
+  if(s===409||s===422)return 'Busy, please try again in a moment.';
+  return 'GitHub error ('+s+').';
 }
 async function getList(){
   var r=await api('photos.json');
   if(r.status===404)return{list:[],sha:null};
-  if(!r.ok)throw new Error('Cannot read photo list ('+r.status+'). Check username, repository name and token.');
+  if(!r.ok)throw new Error(errMsg(r.status));
   var j=await r.json(),list=[];
   try{list=JSON.parse(atob(j.content.replace(/\n/g,'')))}catch(e){}
   return{list:list,sha:j.sha};
@@ -94,88 +141,107 @@ async function saveList(list,sha){
   var body={message:'Update photo list',content:btoa(JSON.stringify(list,null,1))};
   if(sha)body.sha=sha;
   var r=await api('photos.json',{method:'PUT',body:JSON.stringify(body)});
-  if(!r.ok)throw new Error('Cannot save photo list ('+r.status+'). The token needs Contents: Read and write.');
+  if(!r.ok)throw new Error(errMsg(r.status));
 }
 function toJpeg(file){
   return new Promise(function(res,rej){
     var u=URL.createObjectURL(file),im=new Image();
     im.onload=function(){
-      var s=Math.min(1,1600/Math.max(im.width,im.height));
+      var s=Math.min(1,1280/Math.max(im.width,im.height));
       var c=document.createElement('canvas');
       c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);
       var x=c.getContext('2d');
       x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
       x.drawImage(im,0,0,c.width,c.height);
       URL.revokeObjectURL(u);
-      res(c.toDataURL('image/jpeg',0.85).split(',')[1]);
+      var url=c.toDataURL('image/jpeg',0.8);
+      res({b64:url.split(',')[1],url:url});
     };
     im.onerror=function(){rej(new Error('Cannot read '+file.name))};
     im.src=u;
   });
 }
-async function thumb(n,im){
-  try{
-    var r=await api('images/'+n);
-    if(r.ok){
-      var j=await r.json();
-      if(j.content){im.src='data:image/jpeg;base64,'+j.content.replace(/\n/g,'');return}
-    }
-  }catch(e){}
-  im.src='images/'+n;
+function render(list){
+  var g=$('grid');g.innerHTML='';$('count').textContent=list.length;
+  if(!list.length){g.innerHTML='<div class="empty">No photos yet. Add some above.</div>';return}
+  var c=cfg();
+  list.forEach(function(n,k){
+    var t=document.createElement('figure');t.className='thumb';
+    var im=document.createElement('img');im.alt='Photo '+(k+1);im.loading='lazy';
+    im.src=thumbs[n]||('https://raw.githubusercontent.com/'+c.user+'/'+c.repo+'/main/images/'+n);
+    im.onerror=function(){if(!im.dataset.f){im.dataset.f=1;im.src='images/'+n}};
+    var b=document.createElement('span');b.className='num';b.textContent=k+1;
+    var r=document.createElement('button');r.className='rm';r.textContent='Remove';
+    r.onclick=function(){remove(n)};
+    t.appendChild(im);t.appendChild(b);t.appendChild(r);g.appendChild(t);
+  });
 }
-async function refresh(){
+async function connect(){
   try{
-    var d=await getList(),g=$('grid');
-    $('count').textContent='Photos in the slideshow now ('+d.list.length+')';
-    g.innerHTML='';
-    if(!d.list.length){g.textContent='No photos yet.';return}
-    d.list.forEach(function(n){
-      var t=document.createElement('div');t.className='thumb';
-      var im=document.createElement('img');im.alt='Photo';thumb(n,im);
-      var b=document.createElement('button');b.textContent='Remove';
-      b.onclick=function(){remove(n)};
-      t.appendChild(im);t.appendChild(b);g.appendChild(t);
-    });
-  }catch(e){log(e.message)}
+    var c=cfg();
+    if(!c.token)throw new Error('Paste your access token first.');
+    var r=await fetch('https://api.github.com/repos/'+c.user+'/'+c.repo,{headers:{'Authorization':'Bearer '+c.token,'Accept':'application/vnd.github+json'}});
+    if(!r.ok)throw new Error(errMsg(r.status));
+    var j=await r.json();
+    if(j.permissions&&j.permissions.push===false)throw new Error('Token is read-only. Set Contents to Read and write.');
+    var d=await getList();
+    setPill(true,'Connected · '+c.user+'/'+c.repo);
+    render(d.list);$('conn').open=false;
+  }catch(e){setPill(false,'Not connected');toast(e.message,true);$('conn').open=true}
 }
 async function remove(name){
-  if(!confirm('Remove this photo from the slideshow?'))return;
+  if(busy||!confirm('Remove this photo from the slideshow?'))return;
+  busy=true;
   try{
-    log('Removing...');
-    var d=await getList();
-    await saveList(d.list.filter(function(n){return n!==name}),d.sha);
+    var d=await getList(),next=d.list.filter(function(n){return n!==name});
+    await saveList(next,d.sha);
+    render(next);
     var f=await api('images/'+name);
-    if(f.ok){
-      var j=await f.json();
-      await api('images/'+name,{method:'DELETE',body:JSON.stringify({message:'Remove photo',sha:j.sha})});
-    }
-    log('Removed. The slideshow updates in about 1 to 2 minutes.');
-    await refresh();
-  }catch(e){log(e.message)}
+    if(f.ok){var j=await f.json();await api('images/'+name,{method:'DELETE',body:JSON.stringify({message:'Remove photo',sha:j.sha})})}
+    toast('Removed. The slideshow updates within about 30 seconds.');
+  }catch(e){toast(e.message,true)}
+  busy=false;
 }
-$('save').onclick=function(){cfg();log('Saved.');refresh()};
-$('up').onclick=async function(){
-  var files=Array.prototype.slice.call($('files').files);
-  if(!files.length){log('Choose photos first.');return}
-  $('up').disabled=true;
+async function upload(){
+  if(busy||!chosen.length)return;
+  busy=true;$('up').disabled=true;$('barwrap').hidden=false;prog(0.03);
   try{
-    var names=[];
-    for(var i=0;i<files.length;i++){
-      log('Uploading '+(i+1)+' of '+files.length+'...');
+    log('Preparing photos...');
+    var prep=await Promise.all(chosen.map(toJpeg)),names=[],total=prep.length+1;
+    for(var i=0;i<prep.length;i++){
+      log('Uploading '+(i+1)+' of '+prep.length+'...');
       var name=Date.now()+'-'+i+'.jpg';
-      var r=await api('images/'+name,{method:'PUT',body:JSON.stringify({message:'Add photo',content:await toJpeg(files[i])})});
-      if(!r.ok)throw new Error('Upload failed ('+r.status+'). Check the token has Contents: Read and write.');
-      names.push(name);
+      var r=await api('images/'+name,{method:'PUT',body:JSON.stringify({message:'Add photo',content:prep[i].b64})});
+      if(!r.ok)throw new Error(errMsg(r.status));
+      thumbs[name]=prep[i].url;names.push(name);prog((i+1)/total);
     }
-    var d=await getList();
-    await saveList(d.list.concat(names),d.sha);
-    log('Done. New photos show in the slideshow in about 1 to 2 minutes.');
-    $('files').value='';
-    await refresh();
-  }catch(e){log(e.message)}
-  $('up').disabled=false;
-};
-if($('token').value)refresh();
+    log('Updating slideshow...');
+    var d=await getList(),next=d.list.concat(names);
+    await saveList(next,d.sha);prog(1);
+    render(next);chosen=[];$('files').value='';showStrip();log('');
+    toast('Uploaded! The slideshow updates within about 30 seconds.');
+  }catch(e){toast(e.message,true);log(e.message)}
+  setTimeout(function(){$('barwrap').hidden=true;prog(0)},800);
+  busy=false;$('up').disabled=!chosen.length;
+}
+function showStrip(){
+  var s=$('strip');s.innerHTML='';
+  chosen.slice(0,12).forEach(function(f){var im=new Image();im.src=URL.createObjectURL(f);s.appendChild(im)});
+  $('up').disabled=busy||!chosen.length;
+  log(chosen.length?chosen.length+' photo'+(chosen.length>1?'s':'')+' ready':'');
+}
+function pick(files){
+  chosen=Array.prototype.slice.call(files).filter(function(f){return /^image\//.test(f.type)});
+  showStrip();
+}
+$('files').onchange=function(){pick(this.files)};
+var drop=$('drop');
+['dragenter','dragover'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.add('over')})});
+['dragleave','drop'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.remove('over')})});
+drop.addEventListener('drop',function(e){pick(e.dataTransfer.files)});
+$('save').onclick=connect;
+$('up').onclick=upload;
+if($('token').value)connect();
 </script>
 </body>
 </html>
